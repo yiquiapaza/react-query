@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useState } from "react";
+import { useQuery } from "react-query";
 import "./App.css";
 
 const getRandomNumber = async (): Promise<number> => {
@@ -10,39 +11,19 @@ const getRandomNumber = async (): Promise<number> => {
 };
 
 const App = () => {
-  const [number, setNumber] = useState<number>();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>();
-  const [key, forRefetch] = useReducer((num) => num + 1, 0);
-
-  useEffect(() => {
-    setIsLoading(true);
-    getRandomNumber()
-      .then((num) => setNumber(num))
-      .catch((error) => setError(error.message));
-  }, [key]);
-
-  useEffect(() => {
-    if (number) setIsLoading(false);
-  }, [number]);
-
-  useEffect(() => {
-    if (error) {
-      setIsLoading(false);
-    }
-  }, [error]);
+  const query = useQuery(["randomNumber"], getRandomNumber);
 
   return (
     <div className="App">
-      {isLoading ? (
+      {query.isFetching ? (
         <h2>Cargando...</h2>
       ) : (
-        !error && <h2>Numero aleatorio: {number}</h2>
+        !query.isError && <h2>Numero aleatorio: {query.data}</h2>
       )}
-      {!isLoading && error && <h3>{error}</h3>}
-      <button onClick={forRefetch} disabled={isLoading}>
+      {!query.isLoading && query.isError && <h3>{`${query.isError}`}</h3>}
+      <button onClick={() => query.refetch()} disabled={query.isFetching}>
         {" "}
-        {isLoading ? "..." : "New Number"}
+        {query.isFetching ? "..." : "New Number"}
       </button>
     </div>
   );
